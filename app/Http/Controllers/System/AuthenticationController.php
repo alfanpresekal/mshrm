@@ -77,4 +77,104 @@ class AuthenticationController extends Controller
 			}
 		}
 	}
+	
+	public function GetPassword()
+	{
+		return view('auth.password');
+	}
+	
+	public function PostPassword()
+	{
+        if (\Request::ajax())
+		{
+			$input = \Request::all();
+			
+			$validator = \Validator::make($input, [
+				'email' => 'required|exists:users,email',
+			]);
+
+			if ($validator->fails())
+			{
+				return view('ajax.Feedback')->withErrors($validator);
+			}
+			else
+			{
+				$results = \DB::select('SELECT name from users where email = ?', [$input['email']]);
+				
+				foreach ($results as $result)
+				{
+					$name = $result->name;
+				}
+
+				$token_plain = str_random(20);
+				$email = $input['email'];
+				
+				$data['name'] = $name;
+				$data['token'] = $token_plain;
+				
+				$date = new \DateTime;
+				
+				\Mail::send('emails.PasswordReset', $data, function($message) use ($email, $name)
+				{
+					$message->to($email, $name)->subject('Reset Password');
+				});
+				
+				\DB::delete('DELETE FROM password_reset where email = ?', [$input['email']]);
+				
+				\DB::insert('INSERT INTO password_reset (
+						email,
+						token,
+						confirmed,
+						created_at
+					) values (?,?,?,?)', [
+						$input['email'],
+						$token_plain,
+						false,
+						$date
+				]);
+				
+				return 'OK';
+			}
+		}
+	}
+	
+	public function GetConfirm($token)
+	{
+		return view('auth.confirm')->with('reset_token', $token);
+	}
+	
+	public function PostConfirm()
+	{
+        if (\Request::ajax())
+		{
+			$input = \Request::all();
+			
+			$validator = \Validator::make($input, [
+				'reset_token' => 'required|exists:password_reset,token',
+				'password' => 'required|max:128|confirmed',
+			]);
+
+			if ($validator->fails())
+			{
+				return view('ajax.Feedback')->withErrors($validator);
+			}
+			else
+			{
+				$results = \DB::select('SELECT email from password_reset where token = ?', [$input['reset_token']]);
+				
+				foreach ($results as $result)
+				{
+					$email = $result->email;
+				}
+				
+				$date = new \DateTime;
+					
+				\DB::table('users')
+					->where('email', $email)
+					->update(['password' => bcrypt($input['password']), 'updated_at' => $date]);
+				
+				return 'OK';
+			}
+		}
+	}	
 }

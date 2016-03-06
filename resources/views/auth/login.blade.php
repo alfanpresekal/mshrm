@@ -62,7 +62,8 @@
         
         <br>
 
-        <a href="{{ url('/auth/register') }}" class="text-center">Register</a>
+        <a href="{{ url('/auth/register') }}"><p>Register</p></a>
+        <a href="{{ url('/auth/password') }}"><p>Reset Password</p></a>
 
       </div><!-- /.login-box-body -->
     </div><!-- /.login-box -->

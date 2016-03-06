@@ -152,20 +152,17 @@
           <ul class="sidebar-menu">
             <li class="header">NAVIGATION</li>
             <li class="treeview">
+              <a href="{{ url('/admin/UserList') }}">
+                <i class="fa fa-users"></i> <span>Admin</span> <i class="fa fa-angle-left pull-right"></i>
+              </a>
+            </li>
+            <li class="treeview">
               <a href="#">
                 <i class="fa fa-users"></i> <span>Employee</span> <i class="fa fa-angle-left pull-right"></i>
               </a>
               <ul class="treeview-menu">
                 <li><a href="{{ url('/system/UserRegister') }}"><i class="fa fa-user-plus"></i> Add Employee</a></li>
                 <li><a href="{{ url('/system/UserFamily') }}"><i class="fa fa-user-plus"></i> Add Employee's Family Data</a></li>
-              </ul>
-            </li>
-            <li class="treeview">
-              <a href="#">
-                <i class="fa fa-users"></i> <span>Admin</span> <i class="fa fa-angle-left pull-right"></i>
-              </a>
-              <ul class="treeview-menu">
-                <li><a href="{{ url('/system/UserRegister') }}"><i class="fa fa-user-plus"></i> Add Admin / Operator</a></li>
               </ul>
             </li>
           </ul>

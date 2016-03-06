@@ -23,7 +23,10 @@ class SystemController extends Controller
 	
     public function GetUserRegister()
     {
-		return view('system.UserRegisterClone');
+		$results = \DB::select('SELECT * FROM ms_jabatan');
+		$results_2 = \DB::select('SELECT * FROM data_provinsi');
+		
+		return view('system.UserRegisterClone')->with('results', $results)->with('results_2', $results_2);
     }
     
     public function PostUserRegister()
@@ -35,6 +38,10 @@ class SystemController extends Controller
 			$validator = \Validator::make($input, [
 				'nip' => 'required|max:128|unique:data_pribadi',
 				'nama_lengkap' => 'required|max:512',
+				'provinsi' => 'required',
+				'kota' => 'required',
+				'jenis_jabatan' => 'required',
+				'jenis_divisi' => 'required',
 			]);
 			
 			if ($validator->fails())
@@ -44,6 +51,28 @@ class SystemController extends Controller
 			else
 			{
 				$date = new \DateTime;
+				
+				$results = \DB::select('SELECT nama_jabatan, nama_divisi FROM ms_divisi WHERE kode_jabatan = ? AND kode_divisi = ?', [$input['jenis_jabatan'], $input['jenis_divisi']]);
+
+				foreach ($results as $result)
+				{
+					$jenis_jabatan_nama = $result->nama_jabatan;
+					$jenis_divisi_nama = $result->nama_divisi;
+				}
+								
+				$results = \DB::select('SELECT name FROM data_provinsi WHERE id = ?', [$input['provinsi']]);
+				
+				foreach ($results as $result)
+				{
+					$provinsi_nama = $result->name;
+				}
+				
+				$results = \DB::select('SELECT name FROM data_kota WHERE id_provinsi = ? AND id = ?', [$input['provinsi'], $input['kota']]);
+
+				foreach ($results as $result)
+				{
+					$kota_nama = $result->name;
+				}
 				
 				\DB::insert('INSERT INTO data_pribadi(
 						nip,
@@ -57,20 +86,25 @@ class SystemController extends Controller
 						no_ktp,
 						alamat,
 						provinsi,
+						provinsi_nama,
 						kota,
-						kecamatan,
-						kelurahan,
+						kota_nama,
 						kode_pos,
 						suku,
-						literasi,
+						literasi_membaca,
+						literasi_menulis,
 						pendidikan,
 						riwayat_penyakit,
 						bpjs_kesehatan,
 						bpjs_ketenagakerjaan,
 						asurasi,
+						jenis_jabatan,
+						jenis_jabatan_nama,
+						jenis_divisi,
+						jenis_divisi_nama,
 						created_at,
 						updated_at
-					) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', [
+					) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', [
 						$input['nip'],
 						$input['nama_lengkap'],
 						$input['jenis_kelamin'],
@@ -82,17 +116,22 @@ class SystemController extends Controller
 						$input['no_ktp'],
 						$input['alamat'],
 						$input['provinsi'],
+						$provinsi_nama,
 						$input['kota'],
-						$input['kecamatan'],
-						$input['kelurahan'],
+						$kota_nama,
 						$input['kode_pos'],
 						$input['suku'],
-						$input['literasi'],
+						$input['literasi_membaca'],
+						$input['literasi_menulis'],
 						$input['pendidikan'],
 						$input['riwayat_penyakit'],
 						$input['bpjs_kesehatan'],
 						$input['bpjs_ketenagakerjaan'],
 						$input['asurasi'],
+						$input['jenis_jabatan'],
+						$jenis_jabatan_nama,
+						$input['jenis_divisi'],
+						$jenis_divisi_nama,
 						$date,
 						$date
 				]);
@@ -145,7 +184,7 @@ class SystemController extends Controller
 						$failed_sum = $failed_sum + 1;
 					}
 					else
-					{
+					{		
 						\DB::insert('INSERT INTO data_pribadi(
 								nip,
 								nama_lengkap,
@@ -158,20 +197,25 @@ class SystemController extends Controller
 								no_ktp,
 								alamat,
 								provinsi,
+								provinsi_nama,
 								kota,
-								kecamatan,
-								kelurahan,
+								kota_nama,
 								kode_pos,
 								suku,
-								literasi,
+								literasi_membaca,
+								literasi_menulis,
 								pendidikan,
 								riwayat_penyakit,
 								bpjs_kesehatan,
 								bpjs_ketenagakerjaan,
 								asurasi,
+								jenis_jabatan,
+								jenis_jabatan_nama,
+								jenis_divisi,
+								jenis_divisi_nama,
 								created_at,
 								updated_at
-							) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', [
+							) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', [
 								$item[0],
 								$item[1],
 								$item[2],
@@ -194,6 +238,11 @@ class SystemController extends Controller
 								$item[19],
 								$item[20],
 								$item[21],
+								$item[22],
+								$item[23],
+								$item[24],
+								$item[25],
+								$item[26],
 								$date,
 								$date
 						]);
@@ -255,7 +304,7 @@ class SystemController extends Controller
 			$input = \Request::all();
 
 			$validator = \Validator::make($input, [
-				'nip' => 'exists:data_pribadi,nip',
+				'nip' => 'required|exists:data_pribadi,nip',
 			]);
 			
 			if ($validator->fails())
@@ -421,5 +470,27 @@ class SystemController extends Controller
 		}
 		
 		return '{"status":"error"}';
+	}
+	
+	//AJAX
+	
+	public function GetContentDivision($kode_jabatan)
+	{
+        if (\Request::ajax() && $kode_jabatan != '-')
+        {
+			$results = \DB::select('SELECT * FROM ms_divisi where kode_jabatan = ?', [$kode_jabatan]);
+			
+			return view('ajax.GetContentDivision')->with('results', $results);
+		}
+	}
+	
+	public function GetContentCity($kode_provinsi)
+	{
+        if (\Request::ajax() && $kode_provinsi != '-')
+        {	
+
+			$results = \DB::select('SELECT * FROM data_kota where id_provinsi = ?', [$kode_provinsi]);
+			return view('ajax.GetContentCity')->with('results', $results);
+		}
 	}
 }

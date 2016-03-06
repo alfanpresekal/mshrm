@@ -4,9 +4,9 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>2016 mshrm ⋅ Account</title>
-    
+
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
-    
+
     <link rel="stylesheet" href="{{ asset('/LTEAdmin/bootstrap/css/bootstrap.min.css') }}">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
@@ -21,39 +21,30 @@
       <div class="register-logo">
         <b>Mitra</b>Siaga
       </div>
-      
+
       <div class="register-box-body">
-        <p class="login-box-msg">Register</p>
-        
+        <p class="login-box-msg">Reset Password Confirmation</p>
+
         <div id="form_feedback"></div>
         
-		<div id="form_field">
+        <div id="form_field">
           <form id="form_1">
             <input type="hidden" id="form_1_token" value="{{ csrf_token() }}">
-            
+            <input type="hidden" id="form_1_reset_token" value="{{ $reset_token }}">
+
             <div class="form-group has-feedback">
-              <input type="text" class="form-control" id="form_1_nip" placeholder="nip" autocomplete="off">
-              <span class="glyphicon glyphicon-th-list form-control-feedback"></span>
-            </div>
-            
-            <div class="form-group has-feedback">
-              <input type="text" class="form-control" id="form_1_name" placeholder="full name" autocomplete="off">
-              <span class="glyphicon glyphicon-user form-control-feedback"></span>
+              <input type="password" class="form-control" id="form_1_password" placeholder="new password">
+              <span class="glyphicon glyphicon-lock form-control-feedback"></span>
             </div>
           
             <div class="form-group has-feedback">
-              <input type="email" class="form-control" id="form_1_email" placeholder="email" onChange="javascript:this.value=this.value.toLowerCase();" autocomplete="off">
-              <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
+              <input type="password" class="form-control" id="form_1_password_confirmation" placeholder="retype new password">
+              <span class="glyphicon glyphicon-lock form-control-feedback"></span>
             </div>
-            
-            <button type="submit" id="form_1_button_submit" class="btn btn-primary btn-block btn-flat">Register</button>
+
+            <button type="submit" id="form_1_button_submit" class="btn btn-primary btn-block btn-flat">Change Password</button>
           </form>
         </div>
-	    
-        <br>
-        
-        <a href="{{ url('/auth/login') }}"><p>Login</p></a>
-        
       </div>
     </div>
     
@@ -67,7 +58,7 @@
 			radioClass: 'iradio_square-blue',
 			increaseArea: '20%' // optional
 		});
-		});
+	});
 </script>
     
 <script>
@@ -77,17 +68,17 @@ $(document).ready(function(){
 	{	
 		$("#form_feedback").empty().html("<div style='text-align:center;' class='overlay'><i class='fa fa-refresh fa-spin'></i></div><br>");
 		$("#form_1_button_submit").prop('disabled', true);
-		$.post("/auth/register",
+		$.post("/auth/confirm",
 			{
 				_token: $("#form_1_token").val(),
-				nip: $("#form_1_nip").val(),
-				email: $("#form_1_email").val(),
-				name: $("#form_1_name").val(),
+				reset_token: $("#form_1_reset_token").val(),
+				password: $("#form_1_password").val(),
+				password_confirmation: $("#form_1_password_confirmation").val(),
 			},
 		function(data,status){
 			if (data == 'OK')
 			{
-				$("#form_feedback").empty().html("<div class='callout callout-success'><h5>Success, check your email for password.</h5></div>");
+				$("#form_feedback").empty().html("<div class='callout callout-success'><h5>Success, password changed.</h5></div>");
 				$("#form_1_button_submit").prop('disabled', false);
 			}
 			else
@@ -101,6 +92,7 @@ $(document).ready(function(){
 		});
 		event.preventDefault();
 	});
+
 });
 </script>
 
